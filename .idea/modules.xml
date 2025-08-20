@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/benchmarks/benchmarks.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/benchmarks/benchmarks.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/cs-demo-manager.iml" filepath="$PROJECT_DIR$/.idea/cs-demo-manager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/lite/lite.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/lite/lite.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/util/src/main/main.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/util/src/main/main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/core/src/main/main2.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/core/src/main/main2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/protobuf-3.21.8.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/protobuf-3.21.8.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/ruby/ruby.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/ruby/ruby.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/util/src/test/test.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/util/src/test/test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/core/src/test/test2.iml" filepath="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk/thirdparty/protobuf-3.21.8/java/core/src/test/test2.iml" />
+    </modules>
+  </component>
+</project>

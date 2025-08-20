@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/easywsclient" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/hl2sdk" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cs2-server-plugin/cs2-server-plugin/deps/json" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/csgo-server-plugin/csgo-server-plugin/deps/easywsclient" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/csgo-server-plugin/csgo-server-plugin/deps/hl2sdk" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/csgo-server-plugin/csgo-server-plugin/deps/json" vcs="Git" />
+  </component>
+</project>
