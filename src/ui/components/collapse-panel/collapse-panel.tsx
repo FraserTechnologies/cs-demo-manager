@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, type ReactNode } from 'react';
+import React, { useRef, useState, type ReactNode } from 'react';
 
 type Props = {
   header: ReactNode;
@@ -8,17 +8,7 @@ type Props = {
 export function CollapsePanel({ header, children }: Props) {
   const [isContentVisible, setIsContentVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState(0);
-
-  useEffect(() => {
-    if (ref.current === null) {
-      return;
-    }
-
-    setContentHeight(ref.current.getBoundingClientRect().height);
-  }, []);
-
-  const height = isContentVisible ? contentHeight : 0;
+  const height = isContentVisible ? (ref.current?.getBoundingClientRect().height ?? 0) : 0;
 
   const toggleContentVisibility = () => {
     setIsContentVisible(!isContentVisible);
@@ -27,18 +17,18 @@ export function CollapsePanel({ header, children }: Props) {
   return (
     <div>
       <div
-        className="flex items-center p-12 bg-gray-75 border border-gray-300 rounded cursor-pointer"
+        className="flex cursor-pointer items-center rounded border border-gray-300 bg-gray-75 p-12"
         onClick={toggleContentVisibility}
       >
         {header}
       </div>
       <div
-        className="overflow-hidden transition-[height] ease-linear duration-200"
+        className="overflow-hidden transition-[height] duration-200 ease-linear"
         style={{
           height: `${height}px`,
         }}
       >
-        <div className="flex flex-col p-12 bg-gray-75 border-gray-300 border-b border-x overflow-auto" ref={ref}>
+        <div className="flex flex-col overflow-auto border-x border-b border-gray-300 bg-gray-75 p-12" ref={ref}>
           {children}
         </div>
       </div>

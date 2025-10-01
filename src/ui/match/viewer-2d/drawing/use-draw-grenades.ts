@@ -1,5 +1,4 @@
 import { GrenadeName } from 'csdm/common/types/counter-strike';
-import { useCurrentMatch } from 'csdm/ui/match/use-current-match';
 import type { GrenadePosition } from 'csdm/common/types/grenade-position';
 import type { InteractiveCanvas } from 'csdm/ui/hooks/use-interactive-map-canvas';
 import { getGrenadeColor } from './get-grenade-color';
@@ -9,8 +8,7 @@ import { getTeamColor } from 'csdm/ui/styles/get-team-color';
 import { useViewerContext } from '../use-viewer-context';
 
 export function useDrawGrenades() {
-  const match = useCurrentMatch();
-  const { currentFrame, grenadePositions, smokesStart, decoysStart, heGrenadesExplode, flashbangsExplode } =
+  const { currentTick, tickrate, grenadePositions, smokesStart, decoysStart, heGrenadesExplode, flashbangsExplode } =
     useViewerContext();
 
   const drawGrenades = (
@@ -20,8 +18,8 @@ export function useDrawGrenades() {
     const grenadeCircleSize = zoomedSize(4);
 
     const drawSmokeEffect = (smokeStarted: SmokeStart, smokeExpiredPosition: GrenadePosition | undefined) => {
-      const x = zoomedToRadarX(smokeStarted.x);
-      const y = zoomedToRadarY(smokeStarted.y);
+      const x = zoomedToRadarX(smokeStarted.x, smokeStarted.z);
+      const y = zoomedToRadarY(smokeStarted.y, smokeStarted.z);
       context.beginPath();
       context.fillStyle = `${getGrenadeColor(GrenadeName.Smoke)}7f`;
       context.lineWidth = zoomedSize(2);
@@ -33,11 +31,11 @@ export function useDrawGrenades() {
       context.beginPath();
       context.strokeStyle = '#ffffffbb';
       context.lineWidth = 2;
-      const elapsedFrameCount = currentFrame - smokeStarted.frame;
-      const secondsElapsed = elapsedFrameCount / match.frameRate;
+      const elapsedTickCount = currentTick - smokeStarted.tick;
+      const secondsElapsed = elapsedTickCount / tickrate;
       let smokeDuration = 18;
       if (smokeExpiredPosition !== undefined) {
-        smokeDuration = (smokeExpiredPosition.frame - smokeStarted.frame) / match.frameRate;
+        smokeDuration = (smokeExpiredPosition.tick - smokeStarted.tick) / tickrate;
       }
       const percentage = -(secondsElapsed / smokeDuration);
       const startAngle = -Math.PI / 2;
@@ -47,8 +45,8 @@ export function useDrawGrenades() {
     };
 
     const drawDecoyEffect = (position: GrenadePosition) => {
-      const x = zoomedToRadarX(position.x);
-      const y = zoomedToRadarY(position.y);
+      const x = zoomedToRadarX(position.x, position.z);
+      const y = zoomedToRadarY(position.y, position.z);
 
       context.beginPath();
       context.fillStyle = getGrenadeColor(position.grenadeName);
@@ -60,14 +58,14 @@ export function useDrawGrenades() {
 
     const drawHeGrenadeExplode = (heGrenadeExplode: HeGrenadeExplode) => {
       const effectDurationSeconds = 1;
-      const elapsedSinceExplosionFrameCount = currentFrame - heGrenadeExplode.frame;
-      const secondsElapsed = elapsedSinceExplosionFrameCount / match.frameRate;
+      const elapsedSinceExplosionTickCount = currentTick - heGrenadeExplode.tick;
+      const secondsElapsed = elapsedSinceExplosionTickCount / tickrate;
       if (secondsElapsed > effectDurationSeconds) {
         return;
       }
 
-      const x = zoomedToRadarX(heGrenadeExplode.x);
-      const y = zoomedToRadarY(heGrenadeExplode.y);
+      const x = zoomedToRadarX(heGrenadeExplode.x, heGrenadeExplode.z);
+      const y = zoomedToRadarY(heGrenadeExplode.y, heGrenadeExplode.z);
       context.beginPath();
       context.fillStyle = getGrenadeColor(GrenadeName.HE);
       const scale = 1 - secondsElapsed / effectDurationSeconds;
@@ -78,21 +76,21 @@ export function useDrawGrenades() {
     };
 
     const positions = grenadePositions.filter((position) => {
-      return position.frame === currentFrame;
+      return position.tick === currentTick;
     });
 
     for (const position of positions) {
-      const { projectileId, frame, grenadeName } = position;
+      const { projectileId, tick, grenadeName } = position;
 
       switch (grenadeName) {
         case GrenadeName.Smoke: {
           const smokeStart = smokesStart.find((smokeStart) => {
-            return smokeStart.projectileId === projectileId && smokeStart.frame <= currentFrame;
+            return smokeStart.projectileId === projectileId && smokeStart.tick <= currentTick;
           });
           if (smokeStart !== undefined) {
             const smokeExpirePosition = grenadePositions
               .filter((position) => {
-                return position.projectileId === projectileId && frame >= currentFrame;
+                return position.projectileId === projectileId && tick >= currentTick;
               })
               .at(-1);
             drawSmokeEffect(smokeStart, smokeExpirePosition);
@@ -102,7 +100,7 @@ export function useDrawGrenades() {
         }
         case GrenadeName.HE: {
           const heGrenadeExplode = heGrenadesExplode.find((heGrenadeExplode) => {
-            return heGrenadeExplode.projectileId === projectileId && heGrenadeExplode.frame <= currentFrame;
+            return heGrenadeExplode.projectileId === projectileId && heGrenadeExplode.tick <= currentTick;
           });
           if (heGrenadeExplode !== undefined) {
             drawHeGrenadeExplode(heGrenadeExplode);
@@ -112,7 +110,7 @@ export function useDrawGrenades() {
         }
         case GrenadeName.Decoy: {
           const decoyStart = decoysStart.find((decoyStart) => {
-            return decoyStart.projectileId === projectileId && decoyStart.frame <= currentFrame;
+            return decoyStart.projectileId === projectileId && decoyStart.tick <= currentTick;
           });
           if (decoyStart !== undefined) {
             drawDecoyEffect(position);
@@ -123,7 +121,7 @@ export function useDrawGrenades() {
       }
 
       const previousPositions = grenadePositions.filter((position) => {
-        return position.projectileId === projectileId && position.frame < currentFrame;
+        return position.projectileId === projectileId && position.tick < currentTick;
       });
 
       context.strokeStyle = getGrenadeColor(grenadeName);
@@ -134,34 +132,37 @@ export function useDrawGrenades() {
       for (let i = 0; i < previousPositions.length - 1; i++) {
         context.beginPath();
         const currentPosition = previousPositions[i];
-        context.moveTo(zoomedToRadarX(currentPosition.x), zoomedToRadarY(currentPosition.y));
+        context.moveTo(
+          zoomedToRadarX(currentPosition.x, currentPosition.z),
+          zoomedToRadarY(currentPosition.y, currentPosition.z),
+        );
 
         const nextPosition = previousPositions[i + 1];
-        context.lineTo(zoomedToRadarX(nextPosition.x), zoomedToRadarY(nextPosition.y));
+        context.lineTo(zoomedToRadarX(nextPosition.x, nextPosition.z), zoomedToRadarY(nextPosition.y, nextPosition.z));
         context.closePath();
         context.stroke();
       }
 
       // Draw grenade circle
       context.beginPath();
-      const x = zoomedToRadarX(position.x);
-      const y = zoomedToRadarY(position.y);
+      const x = zoomedToRadarX(position.x, position.z);
+      const y = zoomedToRadarY(position.y, position.z);
       context.arc(x, y, grenadeCircleSize, 0, 2 * Math.PI);
       context.closePath();
       context.fill();
     }
 
     const previousflashbangsExplode = flashbangsExplode.filter((flashbangExplode) => {
-      return flashbangExplode.frame <= currentFrame;
+      return flashbangExplode.tick <= currentTick;
     });
     for (const flashbangExplode of previousflashbangsExplode) {
-      const secondsElapsedSinceExplosion = (currentFrame - flashbangExplode.frame) / match.frameRate;
+      const secondsElapsedSinceExplosion = (currentTick - flashbangExplode.tick) / tickrate;
       if (secondsElapsedSinceExplosion > 1) {
         continue;
       }
 
-      const x = zoomedToRadarX(flashbangExplode.x);
-      const y = zoomedToRadarY(flashbangExplode.y);
+      const x = zoomedToRadarX(flashbangExplode.x, flashbangExplode.z);
+      const y = zoomedToRadarY(flashbangExplode.y, flashbangExplode.z);
       context.beginPath();
       context.fillStyle = getGrenadeColor(GrenadeName.Flashbang);
       const scale = 1 - secondsElapsedSinceExplosion;

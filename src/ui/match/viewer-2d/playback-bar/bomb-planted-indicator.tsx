@@ -1,28 +1,25 @@
 import React from 'react';
 import { Trans } from '@lingui/react/macro';
 import { Tooltip } from 'csdm/ui/components/tooltip';
-import { useGetTimeElapsedBetweenFrames } from 'csdm/ui/match/use-time-elapsed-between-frames';
+import { getTimeElapsedBetweenTicks } from 'csdm/ui/match/get-time-elapsed-between-ticks';
 import { Indicator } from 'csdm/ui/match/viewer-2d/playback-bar/indicator';
 import { useViewerContext } from 'csdm/ui/match/viewer-2d/use-viewer-context';
-import { useCurrentMatch } from '../../use-current-match';
 
 type Props = {
   leftX: number;
   planterName: string;
   site: string;
-  frame: number;
+  tick: number;
 };
 
-export function BombPlantedIndicator({ frame, leftX, planterName, site }: Props) {
-  const { round } = useViewerContext();
-  const match = useCurrentMatch();
-  const getTimeElapsedBetweenFrames = useGetTimeElapsedBetweenFrames();
+export function BombPlantedIndicator({ tick, leftX, planterName, site }: Props) {
+  const { round, tickrate } = useViewerContext();
   const siteBlockWidth = 35;
   const center = siteBlockWidth / 2;
-  const time = getTimeElapsedBetweenFrames({
-    startFrame: round.startFrame,
-    endFrame: frame,
-    frameRate: match.frameRate,
+  const time = getTimeElapsedBetweenTicks({
+    tickrate,
+    startTick: round.freezetimeEndTick,
+    endTick: tick,
   });
 
   return (
@@ -37,13 +34,13 @@ export function BombPlantedIndicator({ frame, leftX, planterName, site }: Props)
       placement="top"
     >
       <div
-        className="absolute flex items-center h-full"
+        className="absolute flex h-full items-center"
         style={{
           left: leftX - center,
         }}
       >
         <div
-          className="flex items-center justify-center h-24 rounded bg-[#c9252d] z-1"
+          className="z-1 flex h-24 items-center justify-center rounded bg-[#c9252d]"
           style={{
             width: siteBlockWidth,
           }}

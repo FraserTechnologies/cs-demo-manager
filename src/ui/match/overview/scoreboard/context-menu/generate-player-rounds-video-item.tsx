@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Trans } from '@lingui/react/macro';
 import { useCurrentMatch } from 'csdm/ui/match/use-current-match';
-import { generatePlayerRoundsSequences } from 'csdm/ui/match/video/sequences/sequences-actions';
+import { generatePlayersRoundsSequences } from 'csdm/ui/match/video/sequences/sequences-actions';
 import { buildMatchVideoPath } from 'csdm/ui/routes-paths';
 import { useDispatch } from 'csdm/ui/store/use-dispatch';
 import { ContextMenuItem } from 'csdm/ui/components/context-menu/context-menu-item';
 import { useVideoSettings } from 'csdm/ui/settings/video/use-video-settings';
 import { useDialog } from 'csdm/ui/components/dialogs/use-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from 'csdm/ui/dialogs/dialog';
-import { Button, ButtonVariant } from 'csdm/ui/components/buttons/button';
 import { CancelButton } from 'csdm/ui/components/buttons/cancel-button';
 import { SecondsInput } from 'csdm/ui/components/inputs/seconds-input';
+import { ConfirmButton } from 'csdm/ui/components/buttons/confirm-button';
 
 type GeneratePlayerRoundsDialogProps = {
   steamId: string;
@@ -29,12 +29,14 @@ function GeneratePlayerRoundsDialog({ steamId }: GeneratePlayerRoundsDialogProps
   const submit = () => {
     hideDialog();
     dispatch(
-      generatePlayerRoundsSequences({
+      generatePlayersRoundsSequences({
         match,
-        steamId,
+        steamIds: [steamId],
+        rounds: [],
         settings,
         startSecondsBeforeEvent,
         endSecondsAfterEvent,
+        preserveExistingSequences: false,
       }),
     );
     setTimeout(() => {
@@ -66,9 +68,7 @@ function GeneratePlayerRoundsDialog({ steamId }: GeneratePlayerRoundsDialogProps
         </div>
       </DialogContent>
       <DialogFooter>
-        <Button variant={ButtonVariant.Primary} onClick={submit}>
-          <Trans context="Button">Confirm</Trans>
-        </Button>
+        <ConfirmButton onClick={submit} />
         <CancelButton onClick={hideDialog} />
       </DialogFooter>
     </Dialog>

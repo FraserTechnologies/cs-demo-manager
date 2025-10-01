@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up NodeJS
         uses: actions/setup-node@v4
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up NodeJS
         uses: actions/setup-node@v4
@@ -51,7 +51,7 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npm run lint -- --concurrency 2
 
       - name: Code format
         run: npm run format -- --check
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up NodeJS
         uses: actions/setup-node@v4
@@ -78,6 +78,7 @@ jobs:
         id: git-diff
         run: |
           npm run i18n:extract
+          git diff --ignore-blank-lines src/ui/translations src/electron-main/translations
           echo "MODIFIED=$(if [ -n "$(git diff --ignore-blank-lines src/ui/translations src/electron-main/translations)" ]; then echo "true"; else echo "false"; fi)" >> "$GITHUB_OUTPUT"
 
       - name: Fail if all translations have not been extracted

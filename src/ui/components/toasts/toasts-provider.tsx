@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Toast, ShowToastOptions } from './toasts-context';
@@ -17,46 +17,43 @@ export function ToastsProvider({ children }: Props) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const timeouts = useRef<Map<string, Timeout>>(new Map());
 
-  const showToast = useCallback(
-    (options: ShowToastOptions) => {
-      const toastId = options.id ?? window.crypto.randomUUID();
-      const timeoutId = timeouts.current.get(toastId)?.id;
-      window.clearTimeout(timeoutId);
+  const showToast = (options: ShowToastOptions) => {
+    const toastId = options.id ?? window.crypto.randomUUID();
+    const timeoutId = timeouts.current.get(toastId)?.id;
+    window.clearTimeout(timeoutId);
 
-      const durationInMs = 5000;
-      timeouts.current.set(toastId, {
-        id: window.setTimeout(() => {
-          removeToast(toastId);
-        }, durationInMs),
-        startedAt: Date.now(),
-        msRemaining: durationInMs,
+    const durationInMs = 5000;
+    timeouts.current.set(toastId, {
+      id: window.setTimeout(() => {
+        removeToast(toastId);
+      }, durationInMs),
+      startedAt: Date.now(),
+      msRemaining: durationInMs,
+    });
+
+    const isToastAlreadyExists = timeoutId !== undefined || toasts.some((toast) => toast.id === toastId);
+    if (isToastAlreadyExists) {
+      setToasts((toasts) => {
+        return toasts.map((toast) => {
+          if (toast.id === toastId) {
+            return { ...options, id: toastId };
+          }
+
+          return toast;
+        });
       });
-
-      const isToastAlreadyExists = timeoutId !== undefined || toasts.some((toast) => toast.id === toastId);
-      if (isToastAlreadyExists) {
-        setToasts((toasts) => {
-          return toasts.map((toast) => {
-            if (toast.id === toastId) {
-              return { ...options, id: toastId };
-            }
-
-            return toast;
-          });
-        });
-      } else {
-        setToasts((toasts) => {
-          return [
-            ...toasts,
-            {
-              ...options,
-              id: toastId,
-            },
-          ];
-        });
-      }
-    },
-    [toasts],
-  );
+    } else {
+      setToasts((toasts) => {
+        return [
+          ...toasts,
+          {
+            ...options,
+            id: toastId,
+          },
+        ];
+      });
+    }
+  };
 
   const removeToast = (toastId: string) => {
     window.clearTimeout(timeouts.current.get(toastId)?.id);
@@ -70,20 +67,20 @@ export function ToastsProvider({ children }: Props) {
   return (
     <ToastsContext.Provider value={showToast}>
       {children}
-      <div className="absolute z-3 right-24 top-48 flex flex-col gap-y-8 max-w-[448px]">
+      <div className="absolute top-48 right-24 z-3 flex max-w-[448px] flex-col gap-y-8">
         <AnimatePresence>
           {toasts.map((toast) => {
             const renderContent = () => {
               let icon: ReactNode = null;
               switch (toast.type) {
                 case 'success':
-                  icon = <CheckCircleIcon className="size-24 mr-8 text-green-500 self-center" />;
+                  icon = <CheckCircleIcon className="mr-8 size-24 self-center text-green-500" />;
                   break;
                 case 'error':
-                  icon = <TimesCircleIcon className="size-24 mr-8 text-red-500 self-center" />;
+                  icon = <TimesCircleIcon className="mr-8 size-24 self-center text-red-500" />;
                   break;
                 case 'warning':
-                  icon = <ExclamationTriangleIcon className="size-24 mr-8 text-orange-500 self-center" />;
+                  icon = <ExclamationTriangleIcon className="mr-8 size-24 self-center text-orange-500" />;
                   break;
               }
 
@@ -98,7 +95,7 @@ export function ToastsProvider({ children }: Props) {
             return (
               <motion.div
                 key={toast.id}
-                className="flex p-16 bg-gray-75 text-gray-900 border-2 border-gray-300 rounded-8 ml-auto min-w-[300px]"
+                className="ml-auto flex min-w-[300px] rounded-8 border-2 border-gray-300 bg-gray-75 p-16 text-gray-900"
                 initial={{ opacity: 0, x: 100 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 100 }}

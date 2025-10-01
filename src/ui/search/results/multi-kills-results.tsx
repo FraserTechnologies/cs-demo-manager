@@ -33,7 +33,7 @@ export function MultiKillsResults({ multiKills }: Props) {
           <CollapsePanel
             key={multiKill.id}
             header={
-              <div className="flex items-center flex-1 gap-x-8 justify-between overflow-x-auto">
+              <div className="flex flex-1 items-center justify-between gap-x-8 overflow-x-auto">
                 <RowLeft>
                   <MapImage mapName={multiKill.mapName} />
                   <TeamSideIcon side={multiKill.side} />
@@ -65,7 +65,7 @@ export function MultiKillsResults({ multiKills }: Props) {
             }
           >
             {multiKill.kills.map((kill) => {
-              return <KillFeedEntry key={`${kill.victimSteamId}-${kill.frame}`} kill={kill} />;
+              return <KillFeedEntry key={kill.id} kill={kill} />;
             })}
           </CollapsePanel>
         );

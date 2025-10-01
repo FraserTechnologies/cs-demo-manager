@@ -22,6 +22,7 @@ import { PlayersColors } from './players-colors';
 import { SequenceShowOnlyDeathNoticesCheckbox } from './show-only-death-notices-checkbox';
 import { useCanEditVideoPlayersOptions } from 'csdm/ui/match/video/use-can-edit-video-players-options';
 import { SequenceDeathNoticesDurationInput } from './sequence-death-notices-duration-input';
+import { SequenceAssistsCheckbox } from './sequence-assists-checkbox';
 
 type Props = {
   isVisible: boolean;
@@ -63,8 +64,8 @@ export function SequenceDialog({ isVisible, closeDialog, onSaveClick, initialSeq
       {initialSequence !== undefined && (
         <SequenceFormProvider initialSequence={initialSequence}>
           <ContextMenuProvider>
-            <div className="flex flex-col h-full bg-gray-50 p-16 overflow-auto">
-              <div className="flex gap-x-12 max-h-[420px] mb-12">
+            <div className="flex h-full flex-col overflow-auto bg-gray-50 p-16">
+              <div className="mb-12 flex max-h-[420px] gap-x-12">
                 <div className="flex flex-col gap-y-8">
                   <div className="flex flex-col gap-y-8">
                     <StartTickInput />
@@ -73,13 +74,14 @@ export function SequenceDialog({ isVisible, closeDialog, onSaveClick, initialSeq
                   <ManageCamerasButtons />
                   <SequencePlayerVoicesCheckbox />
                   <SequenceXRayCheckbox />
+                  <SequenceAssistsCheckbox />
                   <SequenceShowOnlyDeathNoticesCheckbox />
                   {window.csdm.isWindows && <SequenceDeathNoticesDurationInput />}
                   <div className="flex items-center gap-x-12">
                     <SequenceDuration />
                     <SequenceDiskSpace />
                   </div>
-                  <div className="flex gap-x-8 mt-12">
+                  <div className="mt-12 flex gap-x-8">
                     <SaveSequenceButton onClick={onSaveClick} closeDialog={closeDialog} />
                     <CancelButton onClick={closeDialog} />
                   </div>

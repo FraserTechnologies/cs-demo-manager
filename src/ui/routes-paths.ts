@@ -30,7 +30,7 @@ export const RoutePath = {
   Teams: '/teams',
   TeamHeatmap: 'heatmap',
   TeamMatches: 'matches',
-  TeamEconomy: 'economy',
+  TeamPerformance: 'performance',
   TeamMaps: 'maps',
   Videos: '/videos',
 } as const;

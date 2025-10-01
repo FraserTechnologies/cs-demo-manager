@@ -7,6 +7,7 @@ import type {
 } from 'electron';
 import type fs from 'fs-extra';
 import type { ILogger } from 'csdm/node/logger';
+import type { PreloadResult } from 'csdm/preload/preload-result';
 import type { Settings } from 'csdm/node/settings/settings';
 import type { UpdateSettingsOptions } from 'csdm/node/settings/update-settings';
 import type { getMapRadarBase64 } from 'csdm/node/filesystem/maps/get-map-radar-base64';
@@ -21,6 +22,8 @@ import type { ElementToImageOptions } from 'csdm/preload/element-to-image';
 import type { ThemeName } from 'csdm/common/types/theme-name';
 import type { StartupBehavior } from 'csdm/common/types/startup-behavior';
 import type { AppInformation } from 'csdm/node/get-app-information';
+import type { getDemoAudioData } from 'csdm/preload/get-demo-audio-data';
+import type { getDemoAudioFilePath } from 'csdm/node/demo/get-demo-audio-file-path';
 
 declare global {
   interface PreloadApi {
@@ -35,6 +38,7 @@ declare global {
     ADDITIONAL_ARGUMENTS: string[];
     getStartupArguments: () => Promise<Argument[]>;
     getTheme: () => Promise<ThemeName>;
+    getWebFilePath: (file: File) => string;
     getSystemStartupBehavior: () => Promise<StartupBehavior>;
     updateSystemStartupBehavior: (behavior: StartupBehavior) => Promise<void>;
     clearStartupArguments: () => void;
@@ -54,8 +58,8 @@ declare global {
     getRankImageSrc: (rankNumber: Rank) => string;
     getPremierRankImageSrc: (rank: PremierRank) => string;
     pathExists: typeof fs.pathExists;
-    getAudio: (audioFileName: AudioFileName) => Audio;
     getPathDirectoryName: (path: string) => string;
+    getPathBasename: (path: string) => string;
     showMainWindow: () => void;
     onOpenDemoFile: (callback: (event: IpcRendererEvent, demoPath: string) => void) => () => void;
     onOpenSettings: (callback: () => void) => () => void;
@@ -87,6 +91,9 @@ declare global {
     installUpdate: () => void;
     toggleAutoDownloadUpdates: (isEnabled: boolean) => void;
     shouldShowChangelog: () => Promise<boolean>;
+    getDemoAudioFilePath: typeof getDemoAudioFilePath;
+    getDemoAudioData: typeof getDemoAudioData;
+    getCounterStrikeLogFilePath: (game: Game) => Promise<PreloadResult<string>>;
   }
 
   interface Window {

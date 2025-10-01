@@ -1,5 +1,6 @@
 import React, { useState, type ReactNode } from 'react';
 import { Trans, useLingui } from '@lingui/react/macro';
+import clsx from 'clsx';
 import { HitGroup, WeaponType, type TeamNumber, type WeaponName } from 'csdm/common/types/counter-strike';
 import type { Damage } from 'csdm/common/types/damage';
 import { Body } from './body';
@@ -37,6 +38,9 @@ function buildHitGroupData(damages: Damage[], totalDamageCount: number): HitGrou
 
 function getFilteredDamages(filters: Filter, damages: Damage[], weaponName?: WeaponName) {
   let filteredDamages: Damage[] = damages.filter((damage) => {
+    if (damage.weaponType === WeaponType.Melee) {
+      return true;
+    }
     return damage.hitgroup !== HitGroup.Generic && damage.hitgroup !== HitGroup.Gear;
   });
 
@@ -178,8 +182,9 @@ function buildWeaponsStats(filters: Filter, match: Match) {
   const smgs = allStats.filter((weapon) => weapon.type === WeaponType.SMG);
   const snipers = allStats.filter((weapon) => weapon.type === WeaponType.Sniper);
   const machineGuns = allStats.filter((weapon) => weapon.type === WeaponType.MachineGun);
+  const melee = allStats.filter((weapon) => weapon.type === WeaponType.Melee);
 
-  return { rifles, pistols, smgs, snipers, machineGuns };
+  return { rifles, pistols, smgs, snipers, machineGuns, melee };
 }
 
 export type HumanBodyData = {
@@ -208,7 +213,7 @@ type BodyPartProps = {
 
 function HitGroupStats({ text, value }: BodyPartProps) {
   return (
-    <div className="grid grid-cols-[minmax(auto,100px)_repeat(3,auto)] gap-12 items-center">
+    <div className="grid grid-cols-[minmax(auto,100px)_repeat(3,auto)] items-center gap-12">
       <div className="flex">
         <p className="text-body-strong">{text}</p>
       </div>
@@ -216,19 +221,19 @@ function HitGroupStats({ text, value }: BodyPartProps) {
         <p className="selectable">
           <Trans>Damages</Trans>
         </p>
-        <p className="text-subtitle selectable">{value.damageCount}</p>
+        <p className="selectable text-subtitle">{value.damageCount}</p>
       </div>
       <div className="flex flex-col">
         <p className="selectable">
           <Trans>Hits</Trans>
         </p>
-        <p className="text-subtitle selectable">{value.hitCount}</p>
+        <p className="selectable text-subtitle">{value.hitCount}</p>
       </div>
       <div className="flex flex-col">
         <p className="selectable">
           <Trans>Kills</Trans>
         </p>
-        <p className="text-subtitle selectable">{value.killCount}</p>
+        <p className="selectable text-subtitle">{value.killCount}</p>
       </div>
     </div>
   );
@@ -239,7 +244,7 @@ type CellProps = {
 };
 
 function Cell({ children }: CellProps) {
-  return <div className="px-8 selectable">{children}</div>;
+  return <div className="selectable px-8">{children}</div>;
 }
 
 type HeaderCellProps = {
@@ -252,7 +257,7 @@ function HeaderCell({ children, onClick, sortDirection }: HeaderCellProps) {
   return (
     <div className="flex items-center justify-between px-8" onClick={onClick}>
       <span>{children}</span>
-      <div className={`pr-4 ${sortDirection !== undefined ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={clsx('pr-4', sortDirection ? 'opacity-100' : 'opacity-0')}>
         {sortDirection === 'desc' ? <ArrowDownLongIcon height={16} /> : <ArrowUpLongIcon height={16} />}
       </div>
     </div>
@@ -308,8 +313,8 @@ function WeaponsTable({ weapons, title }: WeaponTableProps) {
 
   return (
     <div className="flex flex-col">
-      <p className="text-body-strong mb-8">{title}</p>
-      <div className="grid grid-cols-6 py-4 bg-gray-100 rounded-t">
+      <p className="mb-8 text-body-strong">{title}</p>
+      <div className="grid grid-cols-6 rounded-t bg-gray-100 py-4">
         <HeaderCell
           onClick={() => {
             updateSort('name');
@@ -393,7 +398,7 @@ export function WeaponsAccuracy() {
     weaponTypes: [],
   });
   const bodyData = getBodyDataFromFilters(filters, match.damages);
-  const { rifles, pistols, smgs, snipers, machineGuns } = buildWeaponsStats(filters, match);
+  const { rifles, pistols, smgs, snipers, machineGuns, melee } = buildWeaponsStats(filters, match);
 
   return (
     <div className="flex flex-col gap-y-12">
@@ -456,10 +461,11 @@ export function WeaponsAccuracy() {
           {smgs.length > 0 && <WeaponsTable title={t`SMGs`} weapons={smgs} />}
           {snipers.length > 0 && <WeaponsTable title={t`Snipers`} weapons={snipers} />}
           {machineGuns.length > 0 && <WeaponsTable title={t`Machine guns`} weapons={machineGuns} />}
+          {melee.length > 0 && <WeaponsTable title={t`Melee`} weapons={melee} />}
         </div>
 
         <div className="flex h-fit">
-          <div className="flex self-center flex-none">
+          <div className="flex flex-none self-center">
             <Body data={bodyData} width={200} />
           </div>
 

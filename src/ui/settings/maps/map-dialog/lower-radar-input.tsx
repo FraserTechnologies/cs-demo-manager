@@ -12,11 +12,9 @@ export function LowerRadarInput() {
 
   const updateLowerRadarFieldFromImageFilePath = async (imageFilePath: string) => {
     try {
-      const fileWidth = 1024;
-      const fileHeight = 1024;
       const png = await window.csdm.getPngInformation(imageFilePath);
-      if (png.width !== fileWidth || png.height !== fileHeight) {
-        setField(value, t`Radar image size must be ${fileWidth}x${fileHeight}.`);
+      if (png.width !== png.height) {
+        setField(value, t`The radar image must be a square.`);
         return;
       }
       setField(png.base64, undefined);
@@ -27,9 +25,9 @@ export function LowerRadarInput() {
 
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const files: FileList = event.dataTransfer.files;
+    const { files } = event.dataTransfer;
     if (files.length > 0) {
-      updateLowerRadarFieldFromImageFilePath(files[0].path);
+      updateLowerRadarFieldFromImageFilePath(window.csdm.getWebFilePath(files[0]));
     }
   };
 

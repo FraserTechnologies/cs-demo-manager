@@ -8,6 +8,8 @@ type Filter = SearchFilter;
 
 export async function searchWallbangKills({
   steamIds,
+  victimSteamIds,
+  weaponNames,
   mapNames,
   startDate,
   endDate,
@@ -47,6 +49,14 @@ export async function searchWallbangKills({
 
   if (steamIds.length > 0) {
     query = query.where('killer_steam_id', 'in', steamIds);
+  }
+
+  if (victimSteamIds.length > 0) {
+    query = query.where('victim_steam_id', 'in', victimSteamIds);
+  }
+
+  if (weaponNames.length > 0) {
+    query = query.where('weapon_name', 'in', weaponNames);
   }
 
   if (mapNames.length > 0) {

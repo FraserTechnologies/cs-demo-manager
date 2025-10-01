@@ -5,7 +5,6 @@ import type { GrenadeThrow } from 'csdm/common/types/grenade-throw';
 import { useFilteredGrenadesThrow } from './use-filtered-grenades-throw';
 import { FinderRoundsSelect } from './rounds-select';
 import { FinderPlayerSelect } from './players-select';
-import { FinderRadarLevelSelect } from './radar-level-select';
 import { useBuildGrenadeDrawings } from './drawing/build-grenade-drawings';
 import { drawGrenadeDrawings } from './drawing/draw-grenade-drawings';
 import { GrenadesFinderContextMenu } from './context-menu';
@@ -28,10 +27,9 @@ function getRowId(grenadeThrow: GrenadeThrow): string {
 type Props = {
   map: Map;
   grenadesThrow: GrenadeThrow[];
-  radarFileSrc: string;
 };
 
-export function GrenadesFinder({ map, grenadesThrow, radarFileSrc }: Props) {
+export function GrenadesFinder({ map, grenadesThrow }: Props) {
   const match = useCurrentMatch();
   const { watchDemo, isKillCsRequired } = useCounterStrike();
   const { showDialog } = useDialog();
@@ -41,7 +39,7 @@ export function GrenadesFinder({ map, grenadesThrow, radarFileSrc }: Props) {
   const buildGrenadeDrawings = useBuildGrenadeDrawings();
   const { canvasRef, interactiveCanvas } = useMapCanvas({
     map,
-    radarFileSrc,
+    game: match.game,
     draw: async (interactiveCanvas, context) => {
       const drawings = await buildGrenadeDrawings(filteredGrenadesThrow, selectedGrenadeThrow?.id, interactiveCanvas);
       drawGrenadeDrawings(drawings, context, interactiveCanvas, hoveredIdRef);
@@ -110,15 +108,14 @@ export function GrenadesFinder({ map, grenadesThrow, radarFileSrc }: Props) {
 
   return (
     <div className="flex h-full">
-      <div className="flex flex-col flex-1 mr-12 max-w-[488px] gap-y-12">
+      <div className="mr-12 flex max-w-[488px] flex-1 flex-col gap-y-12">
         <GrenadeNameSelect />
         <FinderRoundsSelect />
         <FinderPlayerSelect />
         <FinderSideSelect />
-        <FinderRadarLevelSelect />
         <Table<GrenadeThrow> table={table} />
       </div>
-      <div className="flex flex-1 relative bg-gray-50" ref={setWrapper}>
+      <div className="relative flex flex-1 bg-gray-50" ref={setWrapper}>
         <div className="absolute top-0 size-full overflow-hidden">
           <canvas ref={canvasRef} width={canvasSize.width} height={canvasSize.height} />
         </div>

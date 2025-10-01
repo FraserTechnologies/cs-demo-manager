@@ -10,15 +10,15 @@ type Props = {
 
 export function Weapons({ weapons, currentWeapon, playerName }: Props) {
   return (
-    <div className="flex flex-wrap opacity-50 gap-x-4">
+    <div className="flex flex-wrap gap-x-4 opacity-50">
       {weapons
         .filter((weaponName) => weaponName !== currentWeapon)
-        .map((weaponName) => {
+        .map((weaponName, index) => {
           const WeaponIcon = WEAPONS_ICONS[weaponName];
           if (WeaponIcon !== undefined) {
             return (
-              <div className="relative" key={`weapon-${playerName}-${weaponName}`}>
-                <WeaponIcon className="fill-gray-800 stroke-gray-800 h-20" />
+              <div className="relative" key={`weapon-${playerName}-${weaponName}-${index}`}>
+                <WeaponIcon className="h-20 fill-gray-800 stroke-gray-800" />
               </div>
             );
           }

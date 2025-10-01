@@ -1,40 +1,115 @@
-import React, { type ReactNode } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trans } from '@lingui/react/macro';
+import rehypeStringify from 'rehype-stringify';
+import remarkDirective from 'remark-directive';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import { unified } from 'unified';
+import { visit } from 'unist-util-visit';
+import type { Root } from 'mdast';
+import rehypeExternalLinks from 'rehype-external-links';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from 'csdm/ui/dialogs/dialog';
-import { useDialog } from '../components/dialogs/use-dialog';
-import { CloseButton } from '../components/buttons/close-button';
-import { ExternalLink } from '../components/external-link';
-import { ExclamationTriangleIcon } from '../icons/exclamation-triangle-icon';
-import { Donate } from '../components/donate';
+import { useDialog } from 'csdm/ui/components/dialogs/use-dialog';
+import { CloseButton } from 'csdm/ui/components/buttons/close-button';
+import { ExternalLink } from 'csdm/ui/components/external-link';
+import { Donate } from 'csdm/ui/components/donate';
+import { Status } from 'csdm/common/types/status';
+import { Spinner } from 'csdm/ui/components/spinner';
 
-function Warning({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-x-4">
-      <ExclamationTriangleIcon className="size-12 text-orange-700" />
-      <p className="text-caption">{children}</p>
-    </div>
-  );
+function directiveStylingPlugin() {
+  return function (tree: Root) {
+    visit(tree, function (node) {
+      if (node.type === 'containerDirective') {
+        const data = node.data ?? (node.data = {});
+        data.hName = 'div';
+        switch (node.name) {
+          case 'warning':
+            data.hProperties = { className: 'directive warning' };
+            break;
+          case 'info':
+            data.hProperties = { className: 'directive info' };
+            break;
+          case 'danger':
+            data.hProperties = { className: 'directive danger' };
+            break;
+        }
+      }
+    });
+  };
 }
 
-function Category({ title, warning, children }: { title: string; warning?: string; children: ReactNode }) {
-  return (
-    <li>
-      <div className="flex items-center gap-x-8">
-        <strong className="uppercase">{title}</strong>
-        {warning && <Warning>{warning}</Warning>}
-      </div>
-      <ul className="list-disc list-inside pl-12">{children}</ul>
-    </li>
-  );
-}
-
-function Item({ children }: { children: ReactNode }) {
-  return <li>{children}</li>;
-}
-
-// ! This component has to be updated before each public release.
 export function ChangelogDialog() {
   const { hideDialog } = useDialog();
+  const [status, setStatus] = useState<Status>(Status.Loading);
+  const [html, setHtml] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch(
+          'https://raw.githubusercontent.com/akiver/cs-demo-manager.com/refs/heads/main/src/pages/changelog.mdx',
+          {
+            headers: {
+              'User-Agent': 'CS:DM',
+            },
+          },
+        );
+        const text = await response.text();
+        const versions = text.split('## v').filter((version) => {
+          const trimmedVersion = version.trim();
+          return trimmedVersion !== '' && trimmedVersion.startsWith('3');
+        });
+        if (versions.length === 0) {
+          throw new Error('No versions found in the changelog');
+        }
+
+        let [markdown] = versions;
+        // remove the version number
+        markdown = markdown.replace(/\d+\.\d+\.\d+/g, '');
+        // remove the OSS info directive
+        markdown = markdown.replace(/:::[\w-]+\n([\s\S]*?):::/g, '');
+        // prepend https://cs-demo-manager.com to links
+        markdown = markdown.replace(/]\((\/[^)]+)\)/g, `](https://cs-demo-manager.com$1)`);
+
+        const processor = unified()
+          .use(remarkParse)
+          .use(remarkDirective)
+          .use(directiveStylingPlugin)
+          .use(remarkRehype, { allowDangerousHtml: true })
+          .use(rehypeExternalLinks, { rel: ['noopener', 'noreferrer'], target: '_blank' })
+          .use(rehypeStringify);
+
+        const file = await processor.process(markdown);
+
+        setHtml(String(file));
+        setStatus(Status.Success);
+      } catch (error) {
+        logger.log('Failed to fetch changelog');
+        logger.error(error);
+        setStatus(Status.Error);
+      }
+    })();
+  }, []);
+
+  const renderChangelog = () => {
+    if (status === Status.Loading) {
+      return (
+        <div className="flex h-[120px] items-center justify-center self-center">
+          <Spinner size={48} />
+        </div>
+      );
+    }
+
+    if (status === Status.Error) {
+      return (
+        <p className="text-body-strong">
+          <Trans>Failed to load changelog.</Trans>
+        </p>
+      );
+    }
+
+    return <div className="changelog" dangerouslySetInnerHTML={{ __html: html }} />;
+  };
 
   return (
     <Dialog>
@@ -44,40 +119,8 @@ export function ChangelogDialog() {
         </DialogTitle>
       </DialogHeader>
       <DialogContent>
-        <div className="flex flex-col gap-y-16 max-w-[700px] **:select-text">
-          <div>
-            {/* eslint-disable lingui/no-unlocalized-strings */}
-            <h2 className="text-subtitle mb-8">New features and improvements</h2>
-            <ul>
-              <Category title="ANALYZE">
-                <Item>
-                  Added support for <ExternalLink href="https://esplay.com/">Esplay</ExternalLink> demos.
-                </Item>
-              </Category>
-              <Category title="VIDEO">
-                <Item>
-                  Counter-Strike launch parameters defined in the playback settings are now passed to the game when
-                  using HLAE through its `-customLaunchOptions` parameter.
-                </Item>
-                <Item>
-                  Added HLAE command-line parameters input in the app video settings. They are passed to HLAE when
-                  watching a demo.
-                </Item>
-              </Category>
-              <Category title="DEMOS">
-                <Item>Added back the context menu item to export players voices from the list.</Item>
-              </Category>
-            </ul>
-          </div>
-          <div>
-            <h2 className="text-subtitle mb-8">Fixes</h2>
-            <ul>
-              <Category title="UI">
-                <Item>Handle case sensitivity when sorting table columns.</Item>
-              </Category>
-            </ul>
-          </div>
-          {/* eslint-enable lingui/no-unlocalized-strings */}
+        <div className="flex max-w-[700px] flex-col gap-y-16 **:select-text">
+          {renderChangelog()}
           <Donate />
         </div>
       </DialogContent>

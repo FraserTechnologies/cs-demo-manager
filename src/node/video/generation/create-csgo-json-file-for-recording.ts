@@ -64,20 +64,21 @@ export async function createCsgoJsonFileForRecording({
     'mirv_gameoverlay enable 0',
   ];
 
+  const firstActionsTick = Math.min(tickrate, 128);
   for (let i = 0; i < sequences.length; i++) {
     const sequence = sequences[i];
 
     for (const command of mandatoryCommands) {
-      json.addExecCommand(1, command);
+      json.addExecCommand(firstActionsTick, command);
     }
 
-    json.addExecCommand(1, `cl_draw_only_deathnotices ${sequence.showOnlyDeathNotices ? 1 : 0}`);
-    json.addExecCommand(1, `mirv_deathmsg lifetime ${sequence.deathNoticesDuration}`);
+    json.addExecCommand(firstActionsTick, `cl_draw_only_deathnotices ${sequence.showOnlyDeathNotices ? 1 : 0}`);
+    json.addExecCommand(firstActionsTick, `mirv_deathmsg lifetime ${sequence.deathNoticesDuration}`);
 
     if (sequence.playerVoicesEnabled) {
-      json.enablePlayerVoices(1);
+      json.enablePlayerVoices(firstActionsTick);
     } else {
-      json.disablePlayerVoices(1);
+      json.disablePlayerVoices(firstActionsTick);
     }
 
     const roundedTickrate = Math.round(tickrate);
@@ -94,6 +95,7 @@ export async function createCsgoJsonFileForRecording({
       .addExecCommand(setupSequenceTick, `mirv_streams record name "${hlaeOutputFolderPath}"`)
       .addExecCommand(setupSequenceTick, `mirv_replace_name filter clear`)
       .addExecCommand(setupSequenceTick, `spec_show_xray ${sequence.showXRay ? 1 : 0}`)
+      .addExecCommand(setupSequenceTick, `mp_display_kill_assists ${sequence.showAssists ? 1 : 0}`)
       .addExecCommand(setupSequenceTick, `host_framerate ${framerate}`);
 
     if (presetName !== 'afxClassic') {
@@ -118,7 +120,7 @@ export async function createCsgoJsonFileForRecording({
       }
     }
 
-    json.addSkipAhead(1, setupSequenceTick);
+    json.addSkipAhead(firstActionsTick, setupSequenceTick);
 
     for (const camera of sequence.cameras) {
       json.addSpecPlayer(camera.tick, camera.playerSteamId);

@@ -38,8 +38,10 @@ export const defaultSettings: Settings = {
     theme: 'dark',
     initialPage: Page.Matches,
     redirectDemoToMatch: false,
+    enableHardwareAcceleration: true,
   },
   analyze: {
+    maxConcurrentAnalyses: 4,
     analyzePositions: false,
   },
   playback: {
@@ -65,6 +67,9 @@ export const defaultSettings: Settings = {
     launchParameters: '',
     useHlae: false,
     playerVoicesEnabled: true,
+    followSymbolicLinks: false,
+    customCs2SteamRuntimeScriptLocationEnabled: false,
+    cs2SteamRuntimeScriptPath: '',
   },
   video: {
     recordingSystem: RecordingSystem.CounterStrike,
@@ -72,6 +77,7 @@ export const defaultSettings: Settings = {
     closeGameAfterRecording: true,
     concatenateSequences: false,
     showXRay: true,
+    showAssists: true,
     showOnlyDeathNotices: true,
     deathNoticesDuration: 5,
     playerVoicesEnabled: true,

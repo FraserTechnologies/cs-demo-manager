@@ -62,15 +62,22 @@ export function WeaponTypesFilter({ onChange, selectedWeaponTypes }: Props) {
         message: 'Grenade',
       }),
     },
+    {
+      value: WeaponType.Melee,
+      label: t({
+        id: 'weaponType.melee',
+        message: 'Melee',
+      }),
+    },
   ];
 
   return (
     <div className="flex flex-col gap-y-8">
-      <div className="flex items-baseline">
+      <div className="flex items-baseline justify-between">
         <p>
           <Trans context="Filter weapon types category">Weapon types</Trans>
         </p>
-        <div className="ml-16 mt-px">
+        <div className="mt-px ml-16">
           <FilterSelection
             onSelectAllClick={() => {
               onChange(weaponTypes.map((weaponType) => weaponType.value));

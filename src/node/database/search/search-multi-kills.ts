@@ -11,6 +11,8 @@ type Filter = SearchFilter & {
 export async function searchMultiKills({
   killCount,
   steamIds,
+  victimSteamIds,
+  weaponNames,
   mapNames,
   startDate,
   endDate,
@@ -68,6 +70,34 @@ export async function searchMultiKills({
 
   if (steamIds.length > 0) {
     query = query.where('k1.killer_steam_id', 'in', steamIds);
+  }
+
+  if (victimSteamIds.length > 0) {
+    query = query.where((eb) => {
+      return eb.exists(
+        eb
+          .selectFrom('kills as kv')
+          .select('kv.id')
+          .whereRef('kv.match_checksum', '=', 'k1.match_checksum')
+          .whereRef('kv.round_number', '=', 'k1.round_number')
+          .whereRef('kv.killer_steam_id', '=', 'k1.killer_steam_id')
+          .where('kv.victim_steam_id', 'in', victimSteamIds),
+      );
+    });
+  }
+
+  if (weaponNames.length > 0) {
+    query = query.where((eb) => {
+      return eb.exists(
+        eb
+          .selectFrom('kills as kw')
+          .select('kw.id')
+          .whereRef('kw.match_checksum', '=', 'k1.match_checksum')
+          .whereRef('kw.round_number', '=', 'k1.round_number')
+          .whereRef('kw.killer_steam_id', '=', 'k1.killer_steam_id')
+          .where('kw.weapon_name', 'in', weaponNames),
+      );
+    });
   }
 
   if (mapNames.length > 0) {

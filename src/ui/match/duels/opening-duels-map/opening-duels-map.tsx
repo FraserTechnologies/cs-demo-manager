@@ -25,11 +25,10 @@ function getRowId(kill: Kill): string {
 
 type Props = {
   map: Map;
-  radarFileSrc: string;
   kills: Kill[];
 };
 
-export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
+export function OpeningDuelsMap({ map, kills }: Props) {
   const match = useCurrentMatch();
   const { watchDemo, isKillCsRequired } = useCounterStrike();
   const { showDialog } = useDialog();
@@ -113,7 +112,7 @@ export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
 
   const { canvasRef, interactiveCanvas } = useMapCanvas({
     map,
-    radarFileSrc,
+    game: match.game,
     draw: (interactiveCanvas, context) => {
       const { zoomedToRadarX, zoomedToRadarY, zoomedSize, getMouseX, getMouseY } = interactiveCanvas;
 
@@ -123,8 +122,8 @@ export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
 
       for (const kill of filteredKills) {
         // Draw killer
-        const scaledX = zoomedToRadarX(kill.killerX);
-        const scaledY = zoomedToRadarY(kill.killerY);
+        const scaledX = zoomedToRadarX(kill.killerX, kill.killerZ);
+        const scaledY = zoomedToRadarY(kill.killerY, kill.killerZ);
         const playerRadius = zoomedSize(8);
         context.beginPath();
         context.arc(scaledX, scaledY, playerRadius, 0, 2 * Math.PI);
@@ -139,8 +138,8 @@ export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
         }
 
         // Draw line to victim
-        const scaledVictimX = zoomedToRadarX(kill.victimX);
-        const scaledVictimY = zoomedToRadarY(kill.victimY);
+        const scaledVictimX = zoomedToRadarX(kill.victimX, kill.victimZ);
+        const scaledVictimY = zoomedToRadarY(kill.victimY, kill.victimZ);
         context.beginPath();
         context.moveTo(scaledX, scaledY);
         context.lineTo(scaledVictimX, scaledVictimY);
@@ -153,14 +152,15 @@ export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
         }
 
         // Draw victim
-        const paths = drawPlayerDeath(
+        const paths = drawPlayerDeath({
           context,
           interactiveCanvas,
-          kill.victimX,
-          kill.victimY,
-          kill.victimSide,
-          selectedKill?.id === kill.id ? 'red' : undefined,
-        );
+          x: kill.victimX,
+          y: kill.victimY,
+          z: kill.victimZ,
+          side: kill.victimSide,
+          color: selectedKill?.id === kill.id ? 'red' : undefined,
+        });
         if (!hoveringKill) {
           const isHoveringKill = paths.some((path) => {
             return context.isPointInStroke(path, mouseX, mouseY);
@@ -206,8 +206,8 @@ export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
       <KillFeedEntry
         kill={hoveringKill}
         timeElapsedOption={{
-          frameRate: match.frameRate,
-          roundStartFrame: round?.startFrame ?? 0,
+          tickrate: match.tickrate,
+          roundFreezetimeEndTick: round?.freezetimeEndTick ?? 0,
         }}
       />
     );
@@ -220,7 +220,7 @@ export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
 
   return (
     <div className="flex h-full">
-      <div className="flex flex-col flex-1 mr-12 max-w-[488px] gap-12">
+      <div className="mr-12 flex max-w-[488px] flex-1 flex-col gap-12">
         <PlayersSelect
           players={match.players}
           selectedSteamIds={selectedSteamIds}
@@ -238,10 +238,11 @@ export function OpeningDuelsMap({ map, kills, radarFileSrc }: Props) {
         </div>
         <Table<Kill> table={table} />
       </div>
-      <div className="flex flex-1 relative bg-gray-50" ref={setWrapper}>
+      <div className="relative flex flex-1 bg-gray-50" ref={setWrapper}>
         <div className="absolute top-0 size-full overflow-hidden">
           <canvas
             ref={(ref) => {
+              // eslint-disable-next-line react-hooks/react-compiler
               canvasRef.current = ref;
               refs.setReference(ref);
             }}

@@ -13,6 +13,7 @@ import { searchJumpKills } from 'csdm/node/database/search/search-jump-kills';
 import { searchTeamKills } from 'csdm/node/database/search/search-team-kills';
 import { searchRounds } from 'csdm/node/database/search/search-rounds';
 import { searchNoScopeKills } from 'csdm/node/database/search/search-no-scope-kills';
+import { searchThroughSmokeKills } from 'csdm/node/database/search/search-through-smoke-kills';
 
 export type SearchPayload = SearchFilter & {
   event: SearchEvent;
@@ -23,7 +24,9 @@ export async function searchHandler(payload: SearchPayload) {
     let result: SearchResult = [];
     const filter: SearchFilter = {
       steamIds: payload.steamIds,
+      victimSteamIds: payload.victimSteamIds,
       mapNames: payload.mapNames,
+      weaponNames: payload.weaponNames,
       startDate: payload.startDate,
       endDate: payload.endDate,
       demoSources: payload.demoSources,
@@ -78,6 +81,9 @@ export async function searchHandler(payload: SearchPayload) {
         break;
       case SearchEvent.NoScopeKills:
         result = await searchNoScopeKills(filter);
+        break;
+      case SearchEvent.ThroughSmokeKills:
+        result = await searchThroughSmokeKills(filter);
         break;
       case SearchEvent.TeamKills:
         result = await searchTeamKills(filter);

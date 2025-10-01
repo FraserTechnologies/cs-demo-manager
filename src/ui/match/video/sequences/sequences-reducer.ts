@@ -4,14 +4,14 @@ import {
   addSequence,
   deleteSequence,
   deleteSequences,
-  generatePlayerDeathsSequences,
-  generatePlayerKillsSequences,
-  generatePlayerRoundsSequences,
+  generatePlayersDeathsSequences,
+  generatePlayersKillsSequences,
+  generatePlayersRoundsSequences,
   replaceSequences,
   updateSequence,
 } from './sequences-actions';
-import { buildPlayerEventSequences } from './build-player-event-sequences';
-import { buildPlayerRoundsSequences } from './build-player-rounds-sequences';
+import { buildPlayersEventSequences } from './build-players-event-sequences';
+import { buildPlayersRoundsSequences } from './build-players-rounds-sequences';
 import { PlayerSequenceEvent } from './player-sequence-event';
 
 export type SequencesByDemoFilePath = { [demoFilePath: string]: Sequence[] | undefined };
@@ -23,13 +23,6 @@ export const sequencesReducer = createReducer(initialState, (builder) => {
     .addCase(addSequence, (state, action) => {
       const { sequence, demoFilePath } = action.payload;
       const sequences = state[demoFilePath] ?? [];
-      const sequenceAlreadyExists = sequences.some(({ number, startTick, endTick }) => {
-        return number === sequence.number || (startTick === sequence.startTick && endTick === sequence.endTick);
-      });
-      if (sequenceAlreadyExists) {
-        return;
-      }
-
       sequences.push(sequence);
       state[demoFilePath] = sequences;
     })
@@ -54,29 +47,57 @@ export const sequencesReducer = createReducer(initialState, (builder) => {
     .addCase(replaceSequences, (state, action) => {
       state[action.payload.demoFilePath] = action.payload.sequences;
     })
-    .addCase(generatePlayerKillsSequences, (state, action) => {
-      const sequences = buildPlayerEventSequences({
+    .addCase(generatePlayersKillsSequences, (state, action) => {
+      const {
+        match: { demoFilePath },
+        preserveExistingSequences,
+      } = action.payload;
+      const existingSequences = state[demoFilePath] ?? [];
+      const sequences = buildPlayersEventSequences({
         event: PlayerSequenceEvent.Kills,
         ...action.payload,
+        firstSequenceNumber: preserveExistingSequences ? existingSequences.length + 1 : 1,
       });
-      state[action.payload.match.demoFilePath] = sequences;
+      if (preserveExistingSequences) {
+        state[demoFilePath] = [...existingSequences, ...sequences];
+      } else {
+        state[demoFilePath] = sequences;
+      }
     })
-    .addCase(generatePlayerDeathsSequences, (state, action) => {
-      const sequences = buildPlayerEventSequences({
+    .addCase(generatePlayersDeathsSequences, (state, action) => {
+      const {
+        match: { demoFilePath },
+        preserveExistingSequences,
+      } = action.payload;
+      const existingSequences = state[demoFilePath] ?? [];
+      const sequences = buildPlayersEventSequences({
         event: PlayerSequenceEvent.Deaths,
         ...action.payload,
+        firstSequenceNumber: preserveExistingSequences ? existingSequences.length + 1 : 1,
       });
-      state[action.payload.match.demoFilePath] = sequences;
+      if (preserveExistingSequences) {
+        state[demoFilePath] = [...existingSequences, ...sequences];
+      } else {
+        state[demoFilePath] = sequences;
+      }
     })
-    .addCase(generatePlayerRoundsSequences, (state, action) => {
-      const { match, steamId, settings, startSecondsBeforeEvent, endSecondsAfterEvent } = action.payload;
-      const sequences = buildPlayerRoundsSequences(
+    .addCase(generatePlayersRoundsSequences, (state, action) => {
+      const { match, steamIds, settings, startSecondsBeforeEvent, endSecondsAfterEvent, preserveExistingSequences } =
+        action.payload;
+      const existingSequences = state[match.demoFilePath] ?? [];
+      const sequences = buildPlayersRoundsSequences({
         match,
-        steamId,
+        steamIds,
+        rounds: action.payload.rounds,
         startSecondsBeforeEvent,
         endSecondsAfterEvent,
         settings,
-      );
-      state[match.demoFilePath] = sequences;
+        firstSequenceNumber: preserveExistingSequences ? existingSequences.length + 1 : 1,
+      });
+      if (preserveExistingSequences) {
+        state[match.demoFilePath] = [...existingSequences, ...sequences];
+      } else {
+        state[match.demoFilePath] = sequences;
+      }
     });
 });

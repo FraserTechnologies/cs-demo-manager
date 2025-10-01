@@ -2,19 +2,15 @@ import React from 'react';
 import { Trans } from '@lingui/react/macro';
 import { Switch } from 'csdm/ui/components/inputs/switch';
 import { SettingsEntry } from 'csdm/ui/settings/settings-entry';
-import { useWatchSettings } from './use-watch-settings';
-import { useUpdateSettings } from '../use-update-settings';
 import { ExclamationTriangleIcon } from 'csdm/ui/icons/exclamation-triangle-icon';
+import { usePlaybackSettings } from './use-playback-settings';
 
 export function PlayerVoices() {
-  const { playerVoicesEnabled } = useWatchSettings();
-  const updateSettings = useUpdateSettings();
+  const { playerVoicesEnabled, updateSettings } = usePlaybackSettings();
 
   const onChange = async (isChecked: boolean) => {
     await updateSettings({
-      playback: {
-        playerVoicesEnabled: isChecked,
-      },
+      playerVoicesEnabled: isChecked,
     });
   };
 
@@ -24,7 +20,7 @@ export function PlayerVoices() {
       description={
         <div>
           <Trans>Listen player voices during playback</Trans>
-          <div className="flex items-center gap-x-4 mt-4">
+          <div className="mt-4 flex items-center gap-x-4">
             <ExclamationTriangleIcon className="size-12 shrink-0 text-orange-700" />
             <p className="text-caption">
               <Trans>Doesn't work with Valve Matchmaking demos as voice data are not available!</Trans>

@@ -1,4 +1,5 @@
 import { exec } from 'node:child_process';
+import fs from 'fs-extra';
 import { Game } from 'csdm/common/types/counter-strike';
 import { isWindows } from 'csdm/node/os/is-windows';
 import { killCounterStrikeProcesses } from '../kill-counter-strike-processes';
@@ -17,6 +18,11 @@ import { GameError } from './errors/game-error';
 import { AccessDeniedError } from './errors/access-denied-error';
 import { tryStartingDemoThroughWebSocket } from './try-starting-demo-through-web-socket';
 import { installCounterStrikeServerPlugin, uninstallCounterStrikeServerPlugin } from './cs-server-plugin';
+import { getSteamFolderPath } from '../get-steam-folder-path';
+import { glob } from 'csdm/node/filesystem/glob';
+import { CounterStrikeExecutableNotFound } from './errors/counter-strike-executable-not-found';
+import { isLinux } from 'csdm/node/os/is-linux';
+import type { PlaybackSettings, Settings } from 'csdm/node/settings/settings';
 
 type StartCounterStrikeOptions = {
   demoPath: string;
@@ -30,6 +36,87 @@ type StartCounterStrikeOptions = {
   onGameStart: () => void;
 };
 
+function buildUnixCommand(scriptPath: string, args: string, game: Game) {
+  if (game === Game.CSGO) {
+    return `${scriptPath} --args ${args}`;
+  }
+
+  return `${scriptPath} ${args}`;
+}
+
+async function buildLinuxCommand(scriptPath: string, args: string, game: Game, settings: PlaybackSettings) {
+  const steamFolderPath = await getSteamFolderPath();
+  /**
+   * On Linux CS must be launched through a Steam Linux Runtime script.
+   * This script takes the path to the game's run script as parameter (csgo.sh for CSGO and cs2.sh for CS2).
+   * Trying to run CS directly from the game script will not work because it doesn't export runtime libraries paths
+   * that depend on the OS arch.
+   */
+  const steamScriptName = game === Game.CS2 ? 'SteamLinuxRuntime_sniper/_v2-entry-point' : 'steam-runtime/run.sh';
+  let runSteamScriptPath: string | undefined;
+  if (settings.cs2SteamRuntimeScriptPath) {
+    runSteamScriptPath = settings.cs2SteamRuntimeScriptPath;
+    const scriptExists = await fs.pathExists(runSteamScriptPath);
+    if (!scriptExists) {
+      logger.error(`The provided Steam Linux Runtime script "${runSteamScriptPath}" doesn't exist.`);
+      throw new CounterStrikeExecutableNotFound(game);
+    }
+    logger.log(`Using custom Steam Linux Runtime script at "${runSteamScriptPath}"`);
+  } else {
+    const result = await glob(`**/${steamScriptName}`, {
+      cwd: steamFolderPath,
+      absolute: true,
+      followSymbolicLinks: settings.followSymbolicLinks,
+    });
+    if (result.length === 0) {
+      logger.error(
+        `Cannot find the Steam Linux Runtime script "${steamScriptName}" in the Steam folder at ${steamFolderPath}`,
+      );
+      throw new CounterStrikeExecutableNotFound(game);
+    }
+
+    runSteamScriptPath = result[0];
+  }
+
+  if (!runSteamScriptPath) {
+    logger.error(
+      `Cannot find the Steam Linux Runtime script "${steamScriptName}" in the Steam folder at ${steamFolderPath}`,
+    );
+    throw new CounterStrikeExecutableNotFound(game);
+  }
+
+  const scriptExists = await fs.pathExists(scriptPath);
+  if (!scriptExists) {
+    logger.error(`Cannot find the Counter-Strike script "${scriptPath}"`);
+    throw new CounterStrikeExecutableNotFound(game);
+  }
+
+  const command =
+    game === Game.CS2
+      ? `"${runSteamScriptPath}" --verb=waitforexitandrun -- "${scriptPath}"`
+      : `"${runSteamScriptPath}" "${scriptPath}"`;
+
+  return buildUnixCommand(command, args, game);
+}
+
+function buildWindowsCommand(executablePath: string, args: string) {
+  return `"${executablePath}" ${args}`;
+}
+
+async function buildCommand(executablePath: string, args: string, game: Game, settings: Settings) {
+  if (isWindows) {
+    return buildWindowsCommand(executablePath, args);
+  }
+
+  if (isLinux) {
+    return buildLinuxCommand(executablePath, args, game, settings.playback);
+  }
+
+  return buildUnixCommand(executablePath, args, game);
+}
+
+// Tip: to understand how Steam starts CS you can use the Steam client launch options: -dev -console
+// You would be able to see the command used to start CS in the console.
 export async function startCounterStrike(options: StartCounterStrikeOptions) {
   const { demoPath, game, signal, playDemoArgs, fullscreen } = options;
 
@@ -47,6 +134,7 @@ export async function startCounterStrike(options: StartCounterStrikeOptions) {
   }
 
   const executablePath = await getCounterStrikeExecutablePath(game);
+  logger.log('Found CS executable at:', executablePath);
   const settings = await getSettings();
   const {
     width: userWidth,
@@ -75,17 +163,8 @@ export async function startCounterStrike(options: StartCounterStrikeOptions) {
   const enableFullscreen = fullscreen ?? userFullscreen;
   launchParameters.push(enableFullscreen ? '-fullscreen' : '-sw');
 
-  let command: string;
   const args = launchParameters.join(' ');
-  if (isWindows) {
-    command = `"${executablePath}" ${args}`;
-  } else {
-    if (game === Game.CSGO) {
-      command = `${executablePath} --args ${args}`;
-    } else {
-      command = `${executablePath} ${args}`;
-    }
-  }
+  const command = await buildCommand(executablePath, args, game, settings);
 
   throwIfAborted(signal);
   logger.log('Starting game with command', command);

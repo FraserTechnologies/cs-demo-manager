@@ -16,7 +16,7 @@ import { RoundsPanel } from 'csdm/ui/components/panels/rounds-panel';
 import { KillDeathRatioPanel } from 'csdm/ui/components/panels/kill-death-ratio-panel';
 import { AverageKillsPerRoundPanel } from 'csdm/ui/components/panels/average-kills-per-round-panel';
 import { AverageDeathsPerRoundPanel } from 'csdm/ui/components/panels/average-deaths-per-round-panel';
-import { PlayerClutchesPanel } from 'csdm/ui/player/overview/player-clutches-panel';
+import { PlayerClutches } from 'csdm/ui/player/overview/player-clutches';
 import { HltvRatingPanel } from 'csdm/ui/components/panels/hltv-rating-panel';
 import { PlayerCommentInput } from './player-comment-input';
 import { PlayerUtilitiesPanel } from './player-utilities-panel';
@@ -50,7 +50,7 @@ export function PlayerOverview() {
   return (
     <Content>
       <div className="flex flex-col gap-y-12">
-        <div className="flex gap-8 flex-wrap">
+        <div className="flex flex-wrap gap-8">
           <MatchmakingPanel />
           <PlayerWinRatePanel />
           <div className="flex flex-col gap-y-8">
@@ -89,12 +89,12 @@ export function PlayerOverview() {
           <VacPanel />
         </div>
         <div>
-          <PlayerClutchesPanel />
+          <PlayerClutches />
         </div>
         <div>
           <PlayerLastMatches />
         </div>
-        <div className="min-h-[128px] max-w-[512px] h-max">
+        <div className="h-max min-h-[128px] max-w-[512px]">
           <PlayerCommentInput />
         </div>
       </div>

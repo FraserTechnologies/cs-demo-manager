@@ -13,11 +13,11 @@ type Props = {
 export function RoundsSelect({ rounds, onChange, selectedRoundNumbers }: Props) {
   return (
     <div className="flex flex-col gap-y-8">
-      <div className="flex items-baseline">
+      <div className="flex items-baseline justify-between">
         <p>
           <Trans context="Filter rounds category">Rounds</Trans>
         </p>
-        <div className="ml-16 mt-px">
+        <div className="mt-px ml-16">
           <FilterSelection
             onSelectAllClick={() => {
               onChange(rounds.map((round) => round.number));

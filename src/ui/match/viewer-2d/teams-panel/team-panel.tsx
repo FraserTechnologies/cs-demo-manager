@@ -53,14 +53,14 @@ type Props = {
 };
 
 export function TeamPanel({ teamNumber, teamName, teamScore }: Props) {
-  const { playerPositions, currentFrame } = useViewerContext();
-  const framePositions = playerPositions.filter((playerPosition) => playerPosition.frame === currentFrame);
-  const players: PlayerRowProps[] = buildPlayersFromPositions(framePositions, teamNumber);
+  const { playerPositions, currentTick } = useViewerContext();
+  const tickPositions = playerPositions.filter((playerPosition) => playerPosition.tick === currentTick);
+  const players: PlayerRowProps[] = buildPlayersFromPositions(tickPositions, teamNumber);
 
   return (
-    <div className="flex flex-col bg-gray-50 border border-gray-300 rounded">
+    <div className="flex flex-col rounded border border-gray-300 bg-gray-50">
       <div
-        className="flex items-center justify-between p-8 bg-gray-50 border-b"
+        className="flex items-center justify-between border-b bg-gray-50 p-8"
         style={{
           borderBottomColor: getTeamColor(teamNumber),
         }}

@@ -119,6 +119,7 @@ export function useTimeline({ ticksPerSecond, tickCount, onContextMenu }: Timeli
     panStartX.current = event.clientX;
     // Note: On Windows it will not properly work if the dev tools are opened.
     // https://stackoverflow.com/a/16274104
+    // eslint-disable-next-line react-hooks/react-compiler
     document.body.style.cursor = 'move';
   };
 
@@ -236,7 +237,7 @@ export function useTimeline({ ticksPerSecond, tickCount, onContextMenu }: Timeli
       });
 
       groupNodes.push(
-        <div key={`group-${group.id}`} className="py-4 border-b border-b-gray-900 last:border-none">
+        <div key={`group-${group.id}`} className="border-b border-b-gray-900 py-4 last:border-none">
           <div
             className="relative flex items-center"
             style={{

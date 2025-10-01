@@ -8,8 +8,9 @@ import type {
   SaveDialogOptions,
   SaveDialogReturnValue,
 } from 'electron';
-import { ipcRenderer, contextBridge } from 'electron';
+import { ipcRenderer, contextBridge, webUtils } from 'electron';
 import fs from 'fs-extra';
+import type { PreloadResult } from './preload-result';
 import { getRankImageSrc } from 'csdm/node/filesystem/get-rank-image-src';
 import { getPremierRankImageSrc } from 'csdm/node/filesystem/get-premier-rank-image-src';
 import { isMac } from 'csdm/node/os/is-mac';
@@ -35,6 +36,10 @@ import { elementToImage } from 'csdm/preload/element-to-image';
 import type { StartupBehavior } from 'csdm/common/types/startup-behavior';
 import { getAppInformation } from 'csdm/node/get-app-information';
 import { resetSettings } from 'csdm/node/settings/reset-settings';
+import { getDemoAudioData } from 'csdm/preload/get-demo-audio-data';
+import { getDemoAudioFilePath } from 'csdm/node/demo/get-demo-audio-file-path';
+import { getCounterStrikeLogFilePath } from 'csdm/node/counter-strike/get-counter-strike-log-file-path';
+import { getErrorCodeFromError } from 'csdm/server/get-error-code-from-error';
 
 window.addEventListener('error', onWindowError);
 window.addEventListener('unhandledrejection', (error) => {
@@ -89,11 +94,8 @@ const api: PreloadApi = {
   getPremierRankImageSrc,
   pathExists: fs.pathExists,
   getPathDirectoryName: path.dirname,
+  getPathBasename: path.basename,
   elementToImage,
-
-  getAudio: (audioFileName: string) => {
-    return new Audio(`file://${path.join(getStaticFolderPath(), 'sounds', audioFileName)}`);
-  },
 
   showMainWindow: () => {
     ipcRenderer.invoke(IPCChannel.ShowWindow);
@@ -265,6 +267,21 @@ const api: PreloadApi = {
     await fs.remove(changelogFilePath);
 
     return fileExists;
+  },
+
+  getWebFilePath: (file: File) => {
+    return webUtils.getPathForFile(file);
+  },
+
+  getDemoAudioFilePath,
+  getDemoAudioData,
+  getCounterStrikeLogFilePath: async (game): Promise<PreloadResult<string>> => {
+    try {
+      const logFilePath = await getCounterStrikeLogFilePath(game);
+      return { success: logFilePath };
+    } catch (error) {
+      return { error: { code: getErrorCodeFromError(error) } };
+    }
   },
 };
 

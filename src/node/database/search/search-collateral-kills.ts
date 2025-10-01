@@ -9,6 +9,8 @@ type Filter = SearchFilter;
 
 export async function searchCollateralKills({
   steamIds,
+  victimSteamIds,
+  weaponNames,
   mapNames,
   startDate,
   endDate,
@@ -60,6 +62,24 @@ export async function searchCollateralKills({
 
   if (steamIds.length > 0) {
     query = query.where('k1.killer_steam_id', 'in', steamIds);
+  }
+
+  if (victimSteamIds.length > 0) {
+    query = query.where((eb) => {
+      return eb.exists(
+        eb
+          .selectFrom('kills as victim_filter')
+          .select('victim_filter.id')
+          .whereRef('victim_filter.match_checksum', '=', 'k1.match_checksum')
+          .whereRef('victim_filter.tick', '=', 'k1.tick')
+          .whereRef('victim_filter.killer_steam_id', '=', 'k1.killer_steam_id')
+          .where('victim_filter.victim_steam_id', 'in', victimSteamIds),
+      );
+    });
+  }
+
+  if (weaponNames.length > 0) {
+    query = query.where('k1.weapon_name', 'in', weaponNames);
   }
 
   if (mapNames.length > 0) {

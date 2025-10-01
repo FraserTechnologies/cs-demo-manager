@@ -12,11 +12,9 @@ export function RadarInput() {
 
   const updateRadarFieldFromImageFilePath = async (imageFilePath: string) => {
     try {
-      const fileWidth = 1024;
-      const fileHeight = 1024;
       const png = await window.csdm.getPngInformation(imageFilePath);
-      if (png.width !== fileWidth || png.height !== fileHeight) {
-        setField(value, t`Radar image size must be ${fileWidth}x${fileHeight}.`);
+      if (png.width !== png.height) {
+        setField(value, t`The radar image must be a square.`);
         return;
       }
 
@@ -28,9 +26,9 @@ export function RadarInput() {
 
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const files: FileList = event.dataTransfer.files;
+    const { files } = event.dataTransfer;
     if (files.length > 0) {
-      updateRadarFieldFromImageFilePath(files[0].path);
+      updateRadarFieldFromImageFilePath(window.csdm.getWebFilePath(files[0]));
     }
   };
 

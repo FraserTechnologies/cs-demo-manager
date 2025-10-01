@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { KillIndicator } from './kill-indicator';
 import { FreezetimeEndIndicator } from './freezetime-end-indicator';
 import { useViewerContext } from '../use-viewer-context';
@@ -6,31 +6,43 @@ import { BombExplodedIndicator } from './bomb-exploded-indicator';
 import { BombPlantedIndicator } from './bomb-planted-indicator';
 
 export function Timeline() {
-  const { setIsPlaying, setCurrentFrame, currentFrame, round, kills, isPlaying, bombExploded, bombPlanted } =
-    useViewerContext();
+  const { play, currentTick, round, kills, bombExploded, bombPlanted } = useViewerContext();
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [timelineWidth, setTimelineWidth] = useState(0);
 
-  const getTimelineWidth = () => {
+  useEffect(() => {
     const wrapper = wrapperRef.current;
-    if (wrapper === null) {
-      return 0;
+    if (!wrapper) {
+      return;
     }
 
-    return wrapper.clientWidth;
-  };
+    setTimelineWidth(wrapper.clientWidth);
 
-  const frameToPlaybackBarX = (frame: number) => {
-    const { startFrame, endOfficiallyFrame } = round;
-    const elapsedPercent = (frame - startFrame) / (endOfficiallyFrame - startFrame);
-    const x = getTimelineWidth() * elapsedPercent;
+    const observer = new ResizeObserver(() => {
+      if (wrapperRef.current) {
+        setTimelineWidth(wrapperRef.current.clientWidth);
+      }
+    });
+
+    observer.observe(wrapper);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const tickToPlaybackBarX = (tick: number) => {
+    const { startTick, endOfficiallyTick } = round;
+    const elapsedPercent = (tick - startTick) / (endOfficiallyTick - startTick);
+    const x = timelineWidth * elapsedPercent;
 
     return x;
   };
 
   const getPlayBarElapsedWidth = () => {
-    const { startFrame, endOfficiallyFrame } = round;
-    const elapsedPercent = (currentFrame - startFrame) / (endOfficiallyFrame - startFrame);
-    const width = getTimelineWidth() * elapsedPercent;
+    const { startTick, endOfficiallyTick } = round;
+    const elapsedPercent = (currentTick - startTick) / (endOfficiallyTick - startTick);
+    const width = timelineWidth * elapsedPercent;
     return width;
   };
 
@@ -40,52 +52,43 @@ export function Timeline() {
     }
     const rectangle = wrapperRef.current.getBoundingClientRect();
     const xCoordinate = event.clientX - rectangle.left;
-    const playbackPercent = (xCoordinate * 100) / getTimelineWidth();
-    const { startFrame, endOfficiallyFrame } = round;
-    setCurrentFrame(Math.floor((playbackPercent * (endOfficiallyFrame - startFrame)) / 100 + startFrame));
-
-    if (!isPlaying) {
-      setIsPlaying(true);
-    }
+    const playbackPercent = (xCoordinate * 100) / timelineWidth;
+    const { startTick, endOfficiallyTick } = round;
+    const newTick = Math.floor((playbackPercent * (endOfficiallyTick - startTick)) / 100 + startTick);
+    play(newTick);
   };
 
   const elapsedTimeWidth = getPlayBarElapsedWidth();
 
   return (
-    <div className="flex relative bg-gray-50 border-x border-x-gray-300 w-full" ref={wrapperRef} onClick={onClick}>
+    <div className="relative flex w-full border-x border-x-gray-300 bg-gray-50" ref={wrapperRef} onClick={onClick}>
       <div
         className="bg-gray-300"
         style={{
           width: `${elapsedTimeWidth}px`,
         }}
       />
-      <FreezetimeEndIndicator leftX={frameToPlaybackBarX(round.freezetimeEndFrame)} />
+      <FreezetimeEndIndicator leftX={tickToPlaybackBarX(round.freezetimeEndTick)} />
       {kills.map((kill) => {
-        const leftX = frameToPlaybackBarX(kill.frame);
-        return (
-          <KillIndicator
-            key={`playback-kill-${kill.victimSide}-${kill.frame}-${kill.victimSteamId}`}
-            leftX={leftX}
-            kill={kill}
-          />
-        );
+        const leftX = tickToPlaybackBarX(kill.tick);
+        return <KillIndicator key={kill.id} leftX={leftX} kill={kill} />;
       })}
       {bombExploded !== null && (
         <BombExplodedIndicator
-          key={`playback-bomb-exploded-${bombExploded.frame}-${bombExploded.site}`}
-          leftX={frameToPlaybackBarX(bombExploded.frame)}
+          key={`playback-bomb-exploded-${bombExploded.id}`}
+          leftX={tickToPlaybackBarX(bombExploded.tick)}
           planterName={bombExploded.planterName}
           site={bombExploded.site}
-          frame={bombExploded.frame}
+          tick={bombExploded.tick}
         />
       )}
       {bombPlanted !== null && (
         <BombPlantedIndicator
-          key={`playback-bomb-planted-${bombPlanted.frame}-${bombPlanted.site}`}
-          leftX={frameToPlaybackBarX(bombPlanted.frame)}
+          key={`playback-bomb-planted-${bombPlanted.id}`}
+          leftX={tickToPlaybackBarX(bombPlanted.tick)}
           planterName={bombPlanted.planterName}
           site={bombPlanted.site}
-          frame={bombPlanted.frame}
+          tick={bombPlanted.tick}
         />
       )}
     </div>

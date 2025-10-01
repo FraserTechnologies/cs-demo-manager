@@ -1,6 +1,5 @@
 import React, { useState, type FormEvent } from 'react';
 import { Trans } from '@lingui/react/macro';
-import { Button, ButtonVariant } from 'csdm/ui/components/buttons/button';
 import { useDispatch } from 'csdm/ui/store/use-dispatch';
 import { useCurrentMatch } from 'csdm/ui/match/use-current-match';
 import { replaceSequences } from 'csdm/ui/match/video/sequences/sequences-actions';
@@ -21,6 +20,8 @@ import { ShowOnlyDeathNoticesCheckbox } from 'csdm/ui/match/video/show-only-deat
 import { useCanEditVideoPlayersOptions } from 'csdm/ui/match/video/use-can-edit-video-players-options';
 import { DeathNoticesDurationInput } from '../../death-notices-duration-input';
 import { useVideoSettings } from 'csdm/ui/settings/video/use-video-settings';
+import { ConfirmButton } from 'csdm/ui/components/buttons/confirm-button';
+import { AssistsCheckbox } from '../../assists-checkbox';
 
 type State = {
   overridePlayerFocusSteamId: boolean;
@@ -38,6 +39,7 @@ export function EditSequenceSettingsDialog() {
   const [playerFocusSteamId, setPlayerFocusSteamId] = useState<string | undefined>(undefined);
   const [showOnlyDeathNotices, setShowOnlyDeathNotices] = useState(true);
   const [showXRay, setShowXRay] = useState(false);
+  const [showAssists, setShowAssists] = useState(true);
   const [playerVoicesEnabled, setPlayerVoicesEnabled] = useState(true);
   const [cfg, setCfg] = useState<string | undefined>(undefined);
   const { options: playerOptions } = usePlayersOptions();
@@ -62,6 +64,7 @@ export function EditSequenceSettingsDialog() {
       return {
         ...sequence,
         showXRay,
+        showAssists,
         showOnlyDeathNotices,
         deathNoticesDuration:
           state.overrideDeathNoticesDuration && !isNaN(deathNoticesDuration)
@@ -94,11 +97,12 @@ export function EditSequenceSettingsDialog() {
       </DialogHeader>
       <form onSubmit={onConfirm}>
         <DialogContent>
-          <div className="flex flex-col gap-y-8 max-h-[500px] overflow-hidden">
+          <div className="flex max-h-[500px] flex-col gap-y-8 overflow-hidden">
             <p>
               <Trans>The following settings will be applied to all existing sequences.</Trans>
             </p>
             <XRayCheckbox defaultChecked={showXRay} onChange={setShowXRay} />
+            <AssistsCheckbox defaultChecked={showAssists} onChange={setShowAssists} />
             <ShowOnlyDeathNoticesCheckbox isChecked={showOnlyDeathNotices} onChange={setShowOnlyDeathNotices} />
 
             {window.csdm.isWindows && (
@@ -145,7 +149,7 @@ export function EditSequenceSettingsDialog() {
               />
 
               <CollapseTransition isVisible={state.overrideCfg}>
-                <div className="w-full h-[180px]">
+                <div className="h-[180px] w-full">
                   <CfgInput
                     cfg={cfg}
                     onBlur={(event) => {
@@ -167,7 +171,7 @@ export function EditSequenceSettingsDialog() {
                 />
 
                 <CollapseTransition isVisible={state.overridePlayerOptions}>
-                  <div className="max-h-[300px] overflow-y-auto">
+                  <div className="max-h-[calc(300px-var(--table-row-height)-2px)] overflow-y-auto">
                     <SequencePlayersOptions />
                   </div>
                 </CollapseTransition>
@@ -176,9 +180,7 @@ export function EditSequenceSettingsDialog() {
           </div>
         </DialogContent>
         <DialogFooter>
-          <Button type="submit" variant={ButtonVariant.Primary}>
-            <Trans context="Button">Confirm</Trans>
-          </Button>
+          <ConfirmButton type="submit" />
           <CancelButton onClick={hideDialog} />
         </DialogFooter>
       </form>
